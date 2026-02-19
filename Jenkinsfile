@@ -1,9 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'nodeJs_23'
-    }
 
     environment {
         IMAGE_NAME = 'devops_showcase_stock_service'
