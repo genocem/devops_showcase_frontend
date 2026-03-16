@@ -14,7 +14,7 @@ export default function Home() {
       
       <h2>Test Flow</h2>
       <ol>
-        <li>Go to Stockkkkkkkkkkkkkkkkkkkkkkkkkkk page → Add some products with quantities</li>
+        <li>Go to Stock page → Add some products with quantities</li>
         <li>Go to Shop page → Add products to cart</li>
         <li>Go to Cart page → Review and checkout</li>
         <li>Go to Transactions page → Update status to completed/failed</li>
