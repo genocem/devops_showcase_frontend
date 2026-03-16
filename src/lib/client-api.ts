@@ -13,6 +13,26 @@ type ApiResponse = {
   [key: string]: any;
 };
 
+/**
+ * Converts raw backend error messages into human-readable strings.
+ * Handles MongoDB duplicate key errors (E11000) and falls back to
+ * the original message for everything else.
+ */
+function formatApiError(message: string): string {
+  // MongoDB duplicate key error (E11000)
+  if (message.includes('E11000') || message.includes('duplicate key')) {
+    // Extract field name and offending value from: dup key: { product_name: "banana" }
+    const dupKeyMatch = message.match(/dup key:\s*\{\s*(\w+):\s*"([^"]+)"\s*\}/);
+    if (dupKeyMatch) {
+      const field = dupKeyMatch[1].replace(/_/g, ' ');
+      const value = dupKeyMatch[2];
+      return `A record with ${field} "${value}" already exists. Please choose a different value.`;
+    }
+    return 'This record already exists. Please use a unique value.';
+  }
+  return message;
+}
+
 async function requestJson(url: string, options: RequestInit = {}): Promise<ApiResponse> {
   try {
     const response = await fetch(url, {
@@ -31,10 +51,11 @@ async function requestJson(url: string, options: RequestInit = {}): Promise<ApiR
     }
 
     if (!response.ok) {
-      const message = payload?.message as string | undefined;
+      const rawMessage = payload?.message as string | undefined;
+      const message = rawMessage ? formatApiError(rawMessage) : `Request failed (${response.status})`;
       return {
         success: false,
-        message: message || `Request failed (${response.status})`,
+        message,
         status: response.status,
       };
     }
