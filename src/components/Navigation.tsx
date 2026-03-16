@@ -16,12 +16,15 @@ export default function Navigation() {
 
   return (
     <nav style={{
-      padding: '15px 20px',
-      borderBottom: '1px solid #ccc',
+      padding: '14px 20px',
+      border: '1px solid var(--border)',
+      borderTop: 'none',
+      borderRadius: '0 0 14px 14px',
       marginBottom: '20px',
       display: 'flex',
       gap: '20px',
-      backgroundColor: '#f8f9fa'
+      backgroundColor: 'color-mix(in srgb, var(--surface) 88%, white 12%)',
+      backdropFilter: 'blur(4px)'
     }}>
       {navItems.map((item) => (
         <Link
@@ -29,11 +32,11 @@ export default function Navigation() {
           href={item.href}
           style={{
             textDecoration: 'none',
-            color: pathname === item.href ? '#0066cc' : '#333',
+            color: pathname === item.href ? 'var(--primary-strong)' : 'var(--foreground)',
             fontWeight: pathname === item.href ? 'bold' : 'normal',
-            padding: '5px 10px',
-            borderRadius: '4px',
-            backgroundColor: pathname === item.href ? '#e6f0ff' : 'transparent'
+            padding: '6px 11px',
+            borderRadius: '10px',
+            backgroundColor: pathname === item.href ? 'var(--surface-soft)' : 'transparent'
           }}
         >
           {item.label}

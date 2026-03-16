@@ -16,33 +16,59 @@ const STOCK_API = process.env.STOCK_SERVICE_URL || 'default';
 const CART_API = process.env.CART_SERVICE_URL || 'default';
 const TRANSACTION_API = process.env.TRANSACTION_SERVICE_URL || 'default';
 
+type ServiceResponse = {
+  success?: boolean;
+  message?: string;
+  [key: string]: any;
+};
+
+async function serviceRequest(url: string, options: RequestInit = {}): Promise<ServiceResponse> {
+  try {
+    const res = await fetch(url, { cache: 'no-store', ...options });
+
+    let payload: ServiceResponse | null = null;
+    try {
+      payload = await res.json();
+    } catch {
+      payload = null;
+    }
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message: payload?.message || `Request to service failed (${res.status})`,
+        status: res.status,
+      };
+    }
+
+    if (!payload) {
+      return { success: false, message: 'Service returned invalid JSON' };
+    }
+
+    return payload;
+  } catch {
+    return { success: false, message: 'Failed to connect to upstream service' };
+  }
+}
+
 // ============================================================
 // Stock Service (Server-side only)
 // ============================================================
 
 export async function getAllStock() {
-  const res = await fetch(STOCK_API, { cache: 'no-store' });
-  if (!res.ok) {
-    return { success: false, message: `Failed to fetch stock: ${res.statusText}` };
-  }
-  return res.json();
+  return serviceRequest(STOCK_API);
 }
 
 export async function getStockById(id: string) {
-  const res = await fetch(`${STOCK_API}/${id}`, { cache: 'no-store' });
-  if (!res.ok) {
-    return { success: false, message: `Failed to fetch stock item: ${res.statusText}` };
-  }
-  return res.json();
+  return serviceRequest(`${STOCK_API}/${id}`);
 }
 
 export async function createStock(productName: string, amount: number, price: number = 0) {
-  const res = await fetch(STOCK_API, {
+  return serviceRequest(STOCK_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ product_name: productName, amount, price }),
   });
-  return res.json();
 }
 
 export async function updateStock(id: string, availableQuantity: number, price?: number) {
@@ -50,17 +76,15 @@ export async function updateStock(id: string, availableQuantity: number, price?:
   if (price !== undefined) {
     body.price = price;
   }
-  const res = await fetch(`${STOCK_API}/${id}`, {
+  return serviceRequest(`${STOCK_API}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return res.json();
 }
 
 export async function deleteStock(id: string) {
-  const res = await fetch(`${STOCK_API}/${id}`, { method: 'DELETE' });
-  return res.json();
+  return serviceRequest(`${STOCK_API}/${id}`, { method: 'DELETE' });
 }
 
 // ============================================================
@@ -72,11 +96,7 @@ export async function getOrCreateCart(token?: string) {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(CART_API, { headers, cache: 'no-store' });
-  if (!res.ok) {
-    return { success: false, message: `Failed to fetch cart: ${res.statusText}` };
-  }
-  return res.json();
+  return serviceRequest(CART_API, { headers });
 }
 
 export async function addItemToCart(
@@ -86,7 +106,7 @@ export async function addItemToCart(
   quantity: number,
   price: number
 ) {
-  const res = await fetch(`${CART_API}/items`, {
+  return serviceRequest(`${CART_API}/items`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -99,11 +119,10 @@ export async function addItemToCart(
       price,
     }),
   });
-  return res.json();
 }
 
 export async function updateCartItem(token: string, productName: string, quantity: number) {
-  const res = await fetch(`${CART_API}/items/${encodeURIComponent(productName)}`, {
+  return serviceRequest(`${CART_API}/items/${encodeURIComponent(productName)}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -111,31 +130,27 @@ export async function updateCartItem(token: string, productName: string, quantit
     },
     body: JSON.stringify({ quantity }),
   });
-  return res.json();
 }
 
 export async function removeCartItem(token: string, productName: string) {
-  const res = await fetch(`${CART_API}/items/${encodeURIComponent(productName)}`, {
+  return serviceRequest(`${CART_API}/items/${encodeURIComponent(productName)}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` },
   });
-  return res.json();
 }
 
 export async function checkoutCart(token: string) {
-  const res = await fetch(`${CART_API}/checkout`, {
+  return serviceRequest(`${CART_API}/checkout`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}` },
   });
-  return res.json();
 }
 
 export async function deleteCart(token: string) {
-  const res = await fetch(CART_API, {
+  return serviceRequest(CART_API, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` },
   });
-  return res.json();
 }
 
 // ============================================================
@@ -143,34 +158,21 @@ export async function deleteCart(token: string) {
 // ============================================================
 
 export async function getAllTransactions() {
-  const res = await fetch(TRANSACTION_API, { cache: 'no-store' });
-  if (!res.ok) {
-    return { success: false, message: `Failed to fetch transactions: ${res.statusText}` };
-  }
-  return res.json();
+  return serviceRequest(TRANSACTION_API);
 }
 
 export async function getTransactionById(id: string) {
-  const res = await fetch(`${TRANSACTION_API}/${id}`, { cache: 'no-store' });
-  if (!res.ok) {
-    return { success: false, message: `Failed to fetch transaction: ${res.statusText}` };
-  }
-  return res.json();
+  return serviceRequest(`${TRANSACTION_API}/${id}`);
 }
 
 export async function getTransactionsByCart(cartId: string) {
-  const res = await fetch(`${TRANSACTION_API}/cart/${cartId}`, { cache: 'no-store' });
-  if (!res.ok) {
-    return { success: false, message: `Failed to fetch transactions: ${res.statusText}` };
-  }
-  return res.json();
+  return serviceRequest(`${TRANSACTION_API}/cart/${cartId}`);
 }
 
 export async function updateTransactionStatus(id: string, status: string, cartId?: string) {
-  const res = await fetch(`${TRANSACTION_API}/${id}`, {
+  return serviceRequest(`${TRANSACTION_API}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status, cart_id: cartId }),
   });
-  return res.json();
 }

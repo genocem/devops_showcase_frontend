@@ -10,22 +10,24 @@ export default function MessageDisplay({ error, success }: MessageDisplayProps) 
     <div style={{ marginBottom: '15px' }}>
       {error && (
         <p style={{
-          color: '#721c24',
-          backgroundColor: '#f8d7da',
+          color: '#6f2c2c',
+          backgroundColor: '#f6e1df',
           padding: '10px 15px',
-          borderRadius: '4px',
-          border: '1px solid #f5c6cb'
+          borderRadius: '10px',
+          border: '1px solid #e3bdb7',
+          margin: 0
         }}>
           {error}
         </p>
       )}
       {success && (
         <p style={{
-          color: '#155724',
-          backgroundColor: '#d4edda',
+          color: '#2f5b3c',
+          backgroundColor: '#dfecdf',
           padding: '10px 15px',
-          borderRadius: '4px',
-          border: '1px solid #c3e6cb'
+          borderRadius: '10px',
+          border: '1px solid #b8d4bf',
+          margin: 0
         }}>
           {success}
         </p>

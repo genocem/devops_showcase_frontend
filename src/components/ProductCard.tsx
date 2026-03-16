@@ -16,17 +16,17 @@ export default function ProductCard({
 }: ProductCardProps) {
   return (
     <div style={{
-      border: '1px solid #ddd',
-      borderRadius: '8px',
-      padding: '15px',
-      backgroundColor: '#fff',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      border: '1px solid var(--border)',
+      borderRadius: '12px',
+      padding: '16px',
+      backgroundColor: 'var(--surface)',
+      boxShadow: '0 8px 18px rgba(74, 49, 30, 0.08)'
     }}>
       <h3 style={{ margin: '0 0 10px 0' }}>{productName}</h3>
-      <p style={{ margin: '5px 0', fontSize: '18px', fontWeight: 'bold', color: '#0066cc' }}>
+      <p style={{ margin: '5px 0', fontSize: '18px', fontWeight: 'bold', color: 'var(--primary-strong)' }}>
         ${price.toFixed(2)}
       </p>
-      <p style={{ margin: '5px 0', color: availableQuantity > 0 ? '#28a745' : '#dc3545' }}>
+      <p style={{ margin: '5px 0', color: availableQuantity > 0 ? 'var(--success)' : 'var(--danger)' }}>
         {availableQuantity > 0 ? `In Stock: ${availableQuantity}` : 'Out of Stock'}
       </p>
       <button
@@ -36,10 +36,10 @@ export default function ProductCard({
           marginTop: '10px',
           width: '100%',
           padding: '10px',
-          backgroundColor: availableQuantity > 0 ? '#0066cc' : '#ccc',
+          backgroundColor: availableQuantity > 0 ? 'var(--primary)' : '#cfc6ba',
           color: '#fff',
           border: 'none',
-          borderRadius: '4px',
+          borderRadius: '10px',
           cursor: availableQuantity > 0 && !disabled ? 'pointer' : 'not-allowed'
         }}
       >

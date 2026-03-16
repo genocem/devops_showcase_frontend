@@ -8,10 +8,10 @@ interface ButtonProps {
 }
 
 const variantStyles: Record<string, React.CSSProperties> = {
-  primary: { backgroundColor: '#0066cc', color: '#fff' },
-  secondary: { backgroundColor: '#6c757d', color: '#fff' },
-  danger: { backgroundColor: '#dc3545', color: '#fff' },
-  success: { backgroundColor: '#28a745', color: '#fff' },
+  primary: { backgroundColor: 'var(--primary)', color: '#fff' },
+  secondary: { backgroundColor: '#8f806f', color: '#fff' },
+  danger: { backgroundColor: 'var(--danger)', color: '#fff' },
+  success: { backgroundColor: 'var(--success)', color: '#fff' },
 };
 
 export default function Button({
@@ -28,11 +28,13 @@ export default function Button({
       onClick={onClick}
       disabled={disabled}
       style={{
-        padding: '8px 16px',
+        padding: '9px 16px',
         border: 'none',
-        borderRadius: '4px',
+        borderRadius: '10px',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.6 : 1,
+        transition: 'transform 0.1s ease, filter 0.2s ease',
+        fontWeight: 600,
         ...variantStyles[variant],
         ...style
       }}

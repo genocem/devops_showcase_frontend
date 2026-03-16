@@ -15,10 +15,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navigation />
-        <main style={{ padding: '20px' }}>
-          {children}
-        </main>
+        <div className="app-shell">
+          <Navigation />
+          <main className="main-content">{children}</main>
+        </div>
       </body>
     </html>
   );

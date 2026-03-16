@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4eee3;
+  --surface: #fffaf2;
+  --surface-soft: #f7efe2;
+  --foreground: #332b23;
+  --muted: #7a6b5d;
+  --border: #decfba;
+  --primary: #8a6a46;
+  --primary-strong: #715234;
+  --danger: #9b3f3f;
+  --success: #3f6f4f;
 }
 
 @theme inline {
@@ -14,13 +22,100 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #211a14;
+    --surface: #2e241b;
+    --surface-soft: #3a2d22;
+    --foreground: #efe4d5;
+    --muted: #c3ad92;
+    --border: #594635;
+    --primary: #d2b48c;
+    --primary-strong: #e0c29d;
+    --danger: #f29a9a;
+    --success: #95d0aa;
   }
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at top right, #efe3d1 0%, transparent 35%),
+    radial-gradient(circle at bottom left, #e6d6c2 0%, transparent 35%),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.main-content {
+  padding: 20px;
+}
+
+.page-shell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(66, 42, 24, 0.08);
+}
+
+.page-title {
+  margin-top: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border);
+  padding: 10px;
+  text-align: left;
+}
+
+thead tr {
+  background: var(--surface-soft);
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--foreground);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  border-color: var(--primary);
+}
+
+code {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px 6px;
 }

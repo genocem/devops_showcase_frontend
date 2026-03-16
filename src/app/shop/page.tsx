@@ -28,6 +28,7 @@ export default function ShopPage() {
 
   const fetchProducts = async () => {
     setLoading(true);
+    setError('');
     try {
       const data = await fetchAllStock();
       if (data.success) {
@@ -35,7 +36,7 @@ export default function ShopPage() {
       } else {
         setError(data.message || 'Failed to fetch products');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to connect to stock service');
     }
     setLoading(false);
@@ -51,8 +52,9 @@ export default function ShopPage() {
         setCartToken(data.token);
         return data.token;
       }
-    } catch (err) {
-      setError('Failed to create cart');
+      setError((data.message as string) || 'Failed to create cart');
+    } catch {
+      setError('Unexpected error while creating cart');
     }
     return null;
   };
@@ -64,30 +66,34 @@ export default function ShopPage() {
     const token = await ensureCart();
     if (!token) return;
 
-    const result = await addToCart(
-      token,
-      product.product_id,
-      product.product_name,
-      1,
-      product.price
-    );
+    try {
+      const result = await addToCart(
+        token,
+        product.product_id,
+        product.product_name,
+        1,
+        product.price
+      );
 
-    if (result.success) {
-      setMessage(`Added ${product.product_name} to cart!`);
-    } else {
-      setError(result.message || 'Failed to add to cart');
+      if (result.success) {
+        setMessage(`Added ${product.product_name} to cart!`);
+      } else {
+        setError((result.message as string) || 'Failed to add to cart');
+      }
+    } catch {
+      setError('Unexpected error while adding item to cart');
     }
   };
 
   if (loading) return <LoadingSpinner message="Loading products..." />;
 
   return (
-    <div>
-      <h1>Shop</h1>
+    <div className="page-shell">
+      <h1 className="page-title">Shop</h1>
 
       <MessageDisplay error={error} success={message} />
 
-      {cartToken && <p style={{ color: '#28a745' }}>Cart active ✓</p>}
+      {cartToken && <p style={{ color: 'var(--success)' }}>Cart active ✓</p>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', marginTop: '20px' }}>
         {stocks.map((product) => (
@@ -102,7 +108,7 @@ export default function ShopPage() {
         ))}
       </div>
 
-      {stocks.length === 0 && <p>No products available. Add some in Stock (Admin) page!</p>}
+      {stocks.length === 0 && <p className="muted">No products available. Add some in Stock (Admin) page.</p>}
     </div>
   );
 }

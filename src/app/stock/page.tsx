@@ -29,6 +29,7 @@ export default function StockPage() {
 
   const fetchStock = async () => {
     setLoading(true);
+    setError('');
     try {
       const data = await fetchAllStock();
       if (data.success) {
@@ -36,7 +37,7 @@ export default function StockPage() {
       } else {
         setError(data.message || 'Failed to fetch stock');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to connect to stock service');
     }
     setLoading(false);
@@ -49,48 +50,63 @@ export default function StockPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName || newAmount <= 0) return;
+    setError('');
 
-    const result = await createStockItem(newName, newAmount, newPrice);
-    if (result.success || result.ok) {
-      setNewName('');
-      setNewAmount(0);
-      setNewPrice(0);
-      fetchStock();
-    } else {
-      setError(result.message);
+    try {
+      const result = await createStockItem(newName, newAmount, newPrice);
+      if (result.success || result.ok) {
+        setNewName('');
+        setNewAmount(0);
+        setNewPrice(0);
+        fetchStock();
+      } else {
+        setError((result.message as string) || 'Failed to create product');
+      }
+    } catch {
+      setError('Unexpected error while creating product');
     }
   };
 
   const handleUpdate = async (id: string) => {
-    const result = await updateStockItem(id, editQuantity, editPrice);
-    if (result.success) {
-      setEditId(null);
-      fetchStock();
-    } else {
-      setError(result.message);
+    setError('');
+    try {
+      const result = await updateStockItem(id, editQuantity, editPrice);
+      if (result.success) {
+        setEditId(null);
+        fetchStock();
+      } else {
+        setError((result.message as string) || 'Failed to update product');
+      }
+    } catch {
+      setError('Unexpected error while updating product');
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this product?')) return;
-    const result = await deleteStockItem(id);
-    if (result.success) {
-      fetchStock();
-    } else {
-      setError(result.message);
+    setError('');
+    try {
+      const result = await deleteStockItem(id);
+      if (result.success) {
+        fetchStock();
+      } else {
+        setError((result.message as string) || 'Failed to delete product');
+      }
+    } catch {
+      setError('Unexpected error while deleting product');
     }
   };
 
   if (loading) return <LoadingSpinner message="Loading stock..." />;
 
   return (
-    <div>
-      <h1>Stock Management (Admin)</h1>
+    <div className="page-shell">
+      <h1 className="page-title">Stock Management (Admin)</h1>
 
       <MessageDisplay error={error} />
 
       {/* Add new stock form */}
-      <form onSubmit={handleCreate} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
+      <form onSubmit={handleCreate} style={{ marginBottom: '20px', padding: '12px', border: '1px solid var(--border)', borderRadius: '12px', background: 'var(--surface-soft)' }}>
         <h3>Add New Product</h3>
         <input
           type="text"
@@ -115,27 +131,28 @@ export default function StockPage() {
           step="0.01"
           min="0"
         />
-        <button type="submit">Add Product</button>
+        <Button type="submit">Add Product</Button>
       </form>
 
       {/* Stock list */}
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="table-wrapper">
+      <table>
         <thead>
-          <tr style={{ borderBottom: '2px solid #ccc' }}>
-            <th style={{ textAlign: 'left', padding: '8px' }}>ID</th>
-            <th style={{ textAlign: 'left', padding: '8px' }}>Name</th>
-            <th style={{ textAlign: 'left', padding: '8px' }}>Available</th>
-            <th style={{ textAlign: 'left', padding: '8px' }}>Reserved</th>
-            <th style={{ textAlign: 'left', padding: '8px' }}>Price</th>
-            <th style={{ textAlign: 'left', padding: '8px' }}>Actions</th>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Available</th>
+            <th>Reserved</th>
+            <th>Price</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {stocks.map((stock) => (
-            <tr key={stock.product_id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '8px' }}>{stock.product_id}</td>
-              <td style={{ padding: '8px' }}>{stock.product_name}</td>
-              <td style={{ padding: '8px' }}>
+            <tr key={stock.product_id}>
+              <td>{stock.product_id}</td>
+              <td>{stock.product_name}</td>
+              <td>
                 {editId === stock.product_id ? (
                   <input
                     type="number"
@@ -147,8 +164,8 @@ export default function StockPage() {
                   stock.available_quantity
                 )}
               </td>
-              <td style={{ padding: '8px' }}>{stock.reserved_quantity}</td>
-              <td style={{ padding: '8px' }}>
+              <td>{stock.reserved_quantity}</td>
+              <td>
                 {editId === stock.product_id ? (
                   <input
                     type="number"
@@ -162,16 +179,16 @@ export default function StockPage() {
                   `$${stock.price.toFixed(2)}`
                 )}
               </td>
-              <td style={{ padding: '8px' }}>
+              <td>
                 {editId === stock.product_id ? (
                   <>
-                    <button onClick={() => handleUpdate(stock.product_id)} style={{ marginRight: '5px' }}>Save</button>
-                    <button onClick={() => setEditId(null)}>Cancel</button>
+                    <Button onClick={() => handleUpdate(stock.product_id)} style={{ marginRight: '5px' }}>Save</Button>
+                    <Button onClick={() => setEditId(null)} variant="secondary">Cancel</Button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => { setEditId(stock.product_id); setEditQuantity(stock.available_quantity); setEditPrice(stock.price); }} style={{ marginRight: '5px' }}>Edit</button>
-                    <button onClick={() => handleDelete(stock.product_id)} style={{ color: 'red' }}>Delete</button>
+                    <Button onClick={() => { setEditId(stock.product_id); setEditQuantity(stock.available_quantity); setEditPrice(stock.price); }} style={{ marginRight: '5px' }}>Edit</Button>
+                    <Button onClick={() => handleDelete(stock.product_id)} variant="danger">Delete</Button>
                   </>
                 )}
               </td>
@@ -179,8 +196,9 @@ export default function StockPage() {
           ))}
         </tbody>
       </table>
+      </div>
 
-      {stocks.length === 0 && <p>No products in stock. Add some above!</p>}
+      {stocks.length === 0 && <p className="muted">No products in stock. Add some above.</p>}
     </div>
   );
 }

@@ -31,18 +31,15 @@ export default function CartPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [cartToken, setCartToken] = useState<string | null>(null);
-  const [hasTokenInStorage, setHasTokenInStorage] = useState(false);
 
   // Auto-create cart if none exists
   const initializeCart = async () => {
     const token = localStorage.getItem('cartToken');
     if (token) {
       setCartToken(token);
-      setHasTokenInStorage(true);
       await fetchCart(token);
     } else {
       // No cart token - auto-create a new cart
-      setHasTokenInStorage(false);
       await createNewCart();
     }
   };
@@ -70,12 +67,11 @@ export default function CartPage() {
         if (data.error === 'NOT_FOUND') {
           localStorage.removeItem('cartToken');
           setCartToken(null);
-          setHasTokenInStorage(false);
           await createNewCart();
           return; // createNewCart will set loading to false
         }
       }
-    } catch (err) {
+    } catch {
       setError('Failed to connect to cart service. Please try again.');
     }
     setLoading(false);
@@ -88,13 +84,12 @@ export default function CartPage() {
       if (data.success && data.token) {
         localStorage.setItem('cartToken', data.token);
         setCartToken(data.token);
-        setHasTokenInStorage(true);
         setCart(data.cart);
         setError('');
       } else {
         setError(data.message || 'Failed to create cart');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to connect to cart service. Please try again.');
     }
     setLoading(false);
@@ -111,15 +106,23 @@ export default function CartPage() {
 
   const handleUpdateQuantity = async (productName: string, newQuantity: number) => {
     if (!cartToken) return;
+    if (newQuantity < 1) {
+      setError('Quantity must be at least 1. Use remove to delete an item.');
+      return;
+    }
     setError('');
     setMessage('');
 
-    const result = await updateCartItemQuantity(cartToken, productName, newQuantity);
-    if (result.success) {
-      setCart(result.cart);
-      setMessage(result.message);
-    } else {
-      setError(result.message);
+    try {
+      const result = await updateCartItemQuantity(cartToken, productName, newQuantity);
+      if (result.success) {
+        setCart(result.cart);
+        setMessage(result.message || 'Quantity updated');
+      } else {
+        setError(result.message || 'Failed to update quantity');
+      }
+    } catch {
+      setError('Unexpected error while updating quantity');
     }
   };
 
@@ -128,12 +131,16 @@ export default function CartPage() {
     setError('');
     setMessage('');
 
-    const result = await removeFromCart(cartToken, productName);
-    if (result.success) {
-      setCart(result.cart);
-      setMessage(`Removed ${productName}`);
-    } else {
-      setError(result.message);
+    try {
+      const result = await removeFromCart(cartToken, productName);
+      if (result.success) {
+        setCart(result.cart);
+        setMessage(`Removed ${productName}`);
+      } else {
+        setError(result.message || 'Failed to remove item');
+      }
+    } catch {
+      setError('Unexpected error while removing item');
     }
   };
 
@@ -142,12 +149,16 @@ export default function CartPage() {
     setError('');
     setMessage('');
 
-    const result = await checkoutUserCart(cartToken);
-    if (result.success) {
-      setCart(result.cart);
-      setMessage('Checkout initiated! Transaction created. Check Transactions page.');
-    } else {
-      setError(result.message);
+    try {
+      const result = await checkoutUserCart(cartToken);
+      if (result.success) {
+        setCart(result.cart);
+        setMessage('Checkout initiated. Transaction created. Check Transactions page.');
+      } else {
+        setError(result.message || 'Failed to checkout cart');
+      }
+    } catch {
+      setError('Unexpected error while checking out cart');
     }
   };
 
@@ -158,18 +169,21 @@ export default function CartPage() {
     setError('');
     setMessage('');
 
-    const result = await deleteUserCart(cartToken);
-    if (result.success) {
-      localStorage.removeItem('cartToken');
-      setCartToken(null);
-      setCart(null);
-      setHasTokenInStorage(false);
+    try {
+      const result = await deleteUserCart(cartToken);
+      if (result.success) {
+        localStorage.removeItem('cartToken');
+        setCartToken(null);
+        setCart(null);
 
-      // Auto-create new cart after deletion
-      await createNewCart();
-      setMessage('Cart deleted. New cart created.');
-    } else {
-      setError(result.message);
+        // Auto-create new cart after deletion
+        await createNewCart();
+        setMessage('Cart deleted. New cart created.');
+      } else {
+        setError(result.message || 'Failed to delete cart');
+      }
+    } catch {
+      setError('Unexpected error while deleting cart');
     }
   };
 
@@ -181,7 +195,6 @@ export default function CartPage() {
     localStorage.removeItem('cartToken');
     setCartToken(null);
     setCart(null);
-    setHasTokenInStorage(false);
 
     setLoading(true);
     try {
@@ -189,13 +202,12 @@ export default function CartPage() {
       if (data.success && data.token) {
         localStorage.setItem('cartToken', data.token);
         setCartToken(data.token);
-        setHasTokenInStorage(true);
         setCart(data.cart);
         setMessage('New cart created!');
       } else {
         setError(data.message || 'Failed to create cart');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to connect to cart service. Please try again.');
     }
     setLoading(false);
@@ -206,8 +218,8 @@ export default function CartPage() {
   // Show error state with retry option if fetch/create failed
   if (!cart && error) {
     return (
-      <div>
-        <h1>Cart</h1>
+      <div className="page-shell">
+        <h1 className="page-title">Cart</h1>
         <MessageDisplay error={error} />
         <Button onClick={handleRetryFetch}>Retry</Button>
       </div>
@@ -217,17 +229,17 @@ export default function CartPage() {
   // Should not happen if auto-create works, but fallback UI
   if (!cartToken || !cart) {
     return (
-      <div>
-        <h1>Cart</h1>
+      <div className="page-shell">
+        <h1 className="page-title">Cart</h1>
         <MessageDisplay error={error} />
-        <p>Loading cart...</p>
+        <p className="muted">Loading cart...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>Cart</h1>
+    <div className="page-shell">
+      <h1 className="page-title">Cart</h1>
 
       <MessageDisplay error={error} success={message} />
 
@@ -235,47 +247,53 @@ export default function CartPage() {
       <p>Status: <StatusBadge status={cart.status} /></p>
 
       {cart.items.length === 0 ? (
-        <p>Your cart is empty. Go to Shop to add items!</p>
+        <p className="muted">Your cart is empty. Go to Shop to add items.</p>
       ) : (
         <>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
+          <div className="table-wrapper" style={{ marginBottom: '20px' }}>
+          <table>
             <thead>
-              <tr style={{ borderBottom: '2px solid #ccc' }}>
-                <th style={{ textAlign: 'left', padding: '8px' }}>Product</th>
-                <th style={{ textAlign: 'left', padding: '8px' }}>Price</th>
-                <th style={{ textAlign: 'left', padding: '8px' }}>Quantity</th>
-                <th style={{ textAlign: 'left', padding: '8px' }}>Subtotal</th>
-                <th style={{ textAlign: 'left', padding: '8px' }}>Actions</th>
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {cart.items.map((item) => (
-                <tr key={item.product_id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px' }}>{item.product_name}</td>
-                  <td style={{ padding: '8px' }}>${item.price}</td>
-                  <td style={{ padding: '8px' }}>
-                    <button
+                <tr key={item.product_id}>
+                  <td>{item.product_name}</td>
+                  <td>${item.price}</td>
+                  <td>
+                    <Button
                       onClick={() => handleUpdateQuantity(item.product_name, item.quantity - 1)}
                       disabled={cart.status !== 'active'}
-                    >-</button>
+                      variant="secondary"
+                      style={{ padding: '4px 10px' }}
+                    >-</Button>
                     <span style={{ margin: '0 10px' }}>{item.quantity}</span>
-                    <button
+                    <Button
                       onClick={() => handleUpdateQuantity(item.product_name, item.quantity + 1)}
                       disabled={cart.status !== 'active'}
-                    >+</button>
+                      variant="secondary"
+                      style={{ padding: '4px 10px' }}
+                    >+</Button>
                   </td>
-                  <td style={{ padding: '8px' }}>${item.subtotal.toFixed(2)}</td>
-                  <td style={{ padding: '8px' }}>
-                    <button
+                  <td>${item.subtotal.toFixed(2)}</td>
+                  <td>
+                    <Button
                       onClick={() => handleRemove(item.product_name)}
                       disabled={cart.status !== 'active'}
-                      style={{ color: 'red' }}
-                    >Remove</button>
+                      variant="danger"
+                    >Remove</Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
 
           <h3>Total: ${cart.total.toFixed(2)}</h3>
         </>
@@ -288,7 +306,7 @@ export default function CartPage() {
           </Button>
         )}
         {cart.status === 'frozen' && (
-          <p>Cart is frozen - waiting for transaction completion. Check Transactions page.</p>
+          <p className="muted">Cart is frozen - waiting for transaction completion. Check Transactions page.</p>
         )}
         {cart.status === 'checked_out' && (
           <>

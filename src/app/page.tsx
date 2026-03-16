@@ -1,8 +1,10 @@
 export default function Home() {
   return (
-    <div>
-      <h1>DevOps Showcase - Microservices Testing</h1>
-      <p>Use the navigation above to test different services:</p>
+    <div className="page-shell">
+      <h1 className="page-title">DevOps Showcase</h1>
+      <p className="muted">Use the navigation to test and validate each microservice path.</p>
+
+      <h2>Service Areas</h2>
       <ul>
         <li><strong>Stock (Admin)</strong> - Manage inventory (add, update, delete products)</li>
         <li><strong>Shop</strong> - Browse products and add to cart</li>

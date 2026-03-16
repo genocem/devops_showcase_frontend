@@ -10,17 +10,20 @@ export default function LoadingSpinner({ message = 'Loading...' }: LoadingSpinne
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px',
-      gap: '10px'
+      gap: '12px',
+      backgroundColor: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: '14px'
     }}>
       <div style={{
         width: '40px',
         height: '40px',
-        border: '3px solid #f3f3f3',
-        borderTop: '3px solid #0066cc',
+        border: '3px solid #e8dccd',
+        borderTop: '3px solid var(--primary)',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite'
       }} />
-      <p>{message}</p>
+      <p style={{ margin: 0, color: 'var(--muted)' }}>{message}</p>
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

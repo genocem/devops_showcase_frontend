@@ -7,27 +7,69 @@
  * Client components should ONLY use this file, never lib/api.ts directly.
  */
 
+type ApiResponse = {
+  success?: boolean;
+  message?: string;
+  [key: string]: any;
+};
+
+async function requestJson(url: string, options: RequestInit = {}): Promise<ApiResponse> {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+      },
+      cache: options.cache || 'no-store',
+    });
+
+    let payload: ApiResponse | null = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      const message = payload?.message as string | undefined;
+      return {
+        success: false,
+        message: message || `Request failed (${response.status})`,
+        status: response.status,
+      };
+    }
+
+    if (!payload || typeof payload !== 'object') {
+      return { success: false, message: 'Invalid response format from server' };
+    }
+
+    return payload;
+  } catch {
+    return {
+      success: false,
+      message: 'Network error. Please check your connection and try again.',
+    };
+  }
+}
+
 // ============================================================
 // Stock API (calls /api/stock routes)
 // ============================================================
 
 export async function fetchAllStock() {
-  const res = await fetch('/api/stock', { cache: 'no-store' });
-  return res.json();
+  return requestJson('/api/stock');
 }
 
 export async function fetchStockById(id: string) {
-  const res = await fetch(`/api/stock/${id}`, { cache: 'no-store' });
-  return res.json();
+  return requestJson(`/api/stock/${id}`);
 }
 
 export async function createStockItem(productName: string, amount: number, price: number = 0) {
-  const res = await fetch('/api/stock', {
+  return requestJson('/api/stock', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ product_name: productName, amount, price }),
   });
-  return res.json();
 }
 
 export async function updateStockItem(id: string, availableQuantity: number, price?: number) {
@@ -35,17 +77,15 @@ export async function updateStockItem(id: string, availableQuantity: number, pri
   if (price !== undefined) {
     body.price = price;
   }
-  const res = await fetch(`/api/stock/${id}`, {
+  return requestJson(`/api/stock/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return res.json();
 }
 
 export async function deleteStockItem(id: string) {
-  const res = await fetch(`/api/stock/${id}`, { method: 'DELETE' });
-  return res.json();
+  return requestJson(`/api/stock/${id}`, { method: 'DELETE' });
 }
 
 // ============================================================
@@ -57,8 +97,7 @@ export async function fetchOrCreateCart(token?: string) {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch('/api/cart', { headers, cache: 'no-store' });
-  return res.json();
+  return requestJson('/api/cart', { headers });
 }
 
 export async function addToCart(
@@ -68,7 +107,7 @@ export async function addToCart(
   quantity: number,
   price: number
 ) {
-  const res = await fetch('/api/cart/items', {
+  return requestJson('/api/cart/items', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -81,11 +120,10 @@ export async function addToCart(
       price,
     }),
   });
-  return res.json();
 }
 
 export async function updateCartItemQuantity(token: string, productName: string, quantity: number) {
-  const res = await fetch(`/api/cart/items/${encodeURIComponent(productName)}`, {
+  return requestJson(`/api/cart/items/${encodeURIComponent(productName)}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -93,31 +131,27 @@ export async function updateCartItemQuantity(token: string, productName: string,
     },
     body: JSON.stringify({ quantity }),
   });
-  return res.json();
 }
 
 export async function removeFromCart(token: string, productName: string) {
-  const res = await fetch(`/api/cart/items/${encodeURIComponent(productName)}`, {
+  return requestJson(`/api/cart/items/${encodeURIComponent(productName)}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` },
   });
-  return res.json();
 }
 
 export async function checkoutUserCart(token: string) {
-  const res = await fetch('/api/cart/checkout', {
+  return requestJson('/api/cart/checkout', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}` },
   });
-  return res.json();
 }
 
 export async function deleteUserCart(token: string) {
-  const res = await fetch('/api/cart', {
+  return requestJson('/api/cart', {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` },
   });
-  return res.json();
 }
 
 // ============================================================
@@ -125,20 +159,17 @@ export async function deleteUserCart(token: string) {
 // ============================================================
 
 export async function fetchAllTransactions() {
-  const res = await fetch('/api/transaction', { cache: 'no-store' });
-  return res.json();
+  return requestJson('/api/transaction');
 }
 
 export async function fetchTransactionById(id: string) {
-  const res = await fetch(`/api/transaction/${id}`, { cache: 'no-store' });
-  return res.json();
+  return requestJson(`/api/transaction/${id}`);
 }
 
 export async function updateTransactionStatusById(id: string, status: string, cartId?: string) {
-  const res = await fetch(`/api/transaction/${id}`, {
+  return requestJson(`/api/transaction/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status, cart_id: cartId }),
   });
-  return res.json();
 }
