@@ -10,6 +10,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStockById, updateStock, deleteStock } from '@/lib/api';
 
+function toResponseWithStatus(data: Record<string, unknown>) {
+  const status = typeof data.status === 'number'
+    ? data.status
+    : data.success === false
+      ? 500
+      : 200;
+
+  return NextResponse.json(data, { status });
+}
+
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
@@ -19,7 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const data = await getStockById(id);
-    return NextResponse.json(data);
+    return toResponseWithStatus(data);
   } catch (error) {
     console.error('Error fetching stock item:', error);
     return NextResponse.json(
@@ -44,7 +54,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const data = await updateStock(id, available_quantity, price);
-    return NextResponse.json(data);
+    return toResponseWithStatus(data);
   } catch (error) {
     console.error('Error updating stock:', error);
     return NextResponse.json(
@@ -59,7 +69,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const data = await deleteStock(id);
-    return NextResponse.json(data);
+    return toResponseWithStatus(data);
   } catch (error) {
     console.error('Error deleting stock:', error);
     return NextResponse.json(

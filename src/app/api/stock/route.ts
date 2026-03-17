@@ -11,11 +11,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllStock, createStock } from '@/lib/api';
 
+function toResponseWithStatus(data: Record<string, unknown>) {
+  const status = typeof data.status === 'number'
+    ? data.status
+    : data.success === false
+      ? 500
+      : 200;
+
+  return NextResponse.json(data, { status });
+}
+
 // GET /api/stock - Get all stock items
 export async function GET() {
   try {
     const data = await getAllStock();
-    return NextResponse.json(data);
+    return toResponseWithStatus(data);
   } catch (error) {
     console.error('Error fetching stock:', error);
     return NextResponse.json(
@@ -39,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await createStock(product_name, amount, price || 0);
-    return NextResponse.json(data);
+    return toResponseWithStatus(data);
   } catch (error) {
     console.error('Error creating stock:', error);
     return NextResponse.json(
